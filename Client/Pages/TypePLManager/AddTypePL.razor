@@ -1,0 +1,41 @@
+﻿@page "/AddTypePL"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Lab4.Shared;
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager uriHelper;
+
+<h3>AddTypePL</h3>
+<h3>Добавить новый тип</h3>
+
+<input type="text" @bind-value="@Name" />
+
+<div>
+    <input type="submit" value="Создать" onclick="@Submit" />
+
+    <NavLink class="nav-link" href="PL">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Вернуться
+    </NavLink>
+
+</div>
+
+@code {
+    private TypeLanguageManagerModelView viewModel;
+
+    private string Name;
+
+    async Task Submit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync<string>("api/TypePLManager/PostAdd", Name);
+
+            uriHelper.NavigateTo("TypePLs", forceLoad: true);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+}

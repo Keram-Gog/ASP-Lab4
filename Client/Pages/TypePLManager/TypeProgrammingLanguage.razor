@@ -1,0 +1,83 @@
+﻿@page "/TypePL"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Lab4.Shared
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager uriHelper;
+
+<PageTitle>TypeProgrammingLanguage</PageTitle>
+
+<h3>TypeProgrammingLanguage</h3>
+
+Welcome to your new TypeProgrammingLanguage.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+<div class="nav-item px-3">
+    <NavLink class="nav-link" href="AddTypePL">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Редактировать список
+    </NavLink>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (viewModel != null)
+            @if (viewModel.typelangDescriptions != null)
+            {
+                Counter = 0;
+                @foreach (TypeLanguageDescription list in viewModel.typelangDescriptions)
+                {
+                    Counter++;
+                    <tr>
+                        <td>@Counter</td>
+                        <td>@list.TypeName</td>
+                        <td><button @onclick="@(e => Delete(e, list.Id))">Удалить</button></td>
+                    </tr>
+                }
+            }
+        <tr>
+            
+        </tr>
+    </tbody>
+</table>
+
+@code {
+    private int Counter = 0;
+
+    private TypeLanguageManagerModelView? viewModel;
+
+    private Guid id;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            viewModel = await Http.GetFromJsonAsync<TypeLanguageManagerModelView>("api/TypePLManager");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private async Task Delete(MouseEventArgs e, Guid Id)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync<Guid>("api/TypePLManager/PostRemove", Id);
+            uriHelper.NavigateTo(uriHelper.Uri, forceLoad: true);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+}

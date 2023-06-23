@@ -1,0 +1,122 @@
+﻿@page "/PL"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Lab4.Shared
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager uriHelper;
+
+
+
+<form class="row mb-3">
+    <div class="col-10">
+        <select id="typePLSelect" class="col-sm-9 form-select">
+            @if (viewModel != null)
+                @if (viewModel.TypePL != null)
+                {
+                    @foreach (TypeLanguageDescription typePL in viewModel.TypePL)
+                    {
+                        if (viewModel.SelectedTypePLId == typePL.Id)
+                        {
+                            <option value="@typePL.Id" selected>@typePL.TypeName</option>
+                        }
+                        else
+                        {
+                            <option value="@typePL.Id">@typePL.TypeName</option>
+                        }
+                    }
+                }
+        </select>
+    </div>
+</form>
+
+<div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Наименование</th>
+                <th>Рейтинг</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (viewModel != null)
+                @if (viewModel.PLs != null)
+                {
+                    @foreach (var item in viewModel.PLs)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Rating</td>
+                            <td>
+                                <input type="submit" value="Удалить" @onclick="@(e => DeleteItem(e, @item.Id))" />
+                            </td>
+                        </tr>
+                    }
+                }
+        </tbody>
+    </table>
+</div>
+
+<div>
+
+    <div class="rows-5">
+        <input class="form-control" name="Name" type="text" placeholder="Название" @bind-value="@Name" />
+    </div>
+
+    <div class="rows-3">
+        <input class="form-control" name="Director" type="text" placeholder="Рейтинг" @bind-value="@Reiting" />
+    </div>
+
+
+    <div class="rows-2">
+        <button type="submit" class="btn btn-primary" @onclick="@AddItem">Добавить</button>
+    </div>
+
+</div>
+
+
+
+@code {
+    private IndexViewModel viewModel;
+
+    private string? Name;
+
+    private string? Reiting;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            viewModel = await Http.GetFromJsonAsync<IndexViewModel>("PL");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private async Task AddItem()
+    {
+        var responseID = await Http.PostAsJsonAsync<Guid>("ProgrammingLanguage/PostId", viewModel.SelectedTypePLId);
+
+        var responseList = await Http.PostAsJsonAsync<ProgrammingLanguage>("ProgrammingLanguage/PostAdd", new ProgrammingLanguage( Name, Reiting));
+        uriHelper.NavigateTo(uriHelper.Uri, forceLoad: true);
+    }
+
+    private void SelectedChange(ChangeEventArgs e)
+    {
+        viewModel.SelectedTypePLId = Guid.Parse(e.Value.ToString());
+        var response = Http.PostAsJsonAsync<Guid>("ProgrammingLanguage/PostListId", viewModel.SelectedTypePLId);
+        uriHelper.NavigateTo(uriHelper.Uri, forceLoad: true);
+    }
+
+    private async Task DeleteItem(MouseEventArgs e, Guid ItemId)
+    {
+        var responseID = await Http.PostAsJsonAsync<Guid>("ProgrammingLanguage/PostId", viewModel.SelectedTypePLId);
+
+        var responseList = await Http.PostAsJsonAsync<Guid>("ProgrammingLanguage/PostRemove", ItemId);
+        uriHelper.NavigateTo(uriHelper.Uri, forceLoad: true);
+    }
+}
